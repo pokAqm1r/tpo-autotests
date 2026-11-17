@@ -1,0 +1,305 @@
+{
+  "info": {
+    "name": "ТПО ЛР5 — Users API (JSONPlaceholder)",
+    "description": "Коллекция запросов к https://jsonplaceholder.typicode.com/users с автоматическими проверками на JavaScript.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://jsonplaceholder.typicode.com"
+    },
+    {
+      "key": "newEmail",
+      "value": ""
+    },
+    {
+      "key": "createdId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "GET Список пользователей",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Статус-код 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Ответ в формате JSON\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Возвращается массив из 10 пользователей\", function () {",
+              "    const users = pm.response.json();",
+              "    pm.expect(users).to.be.an(\"array\").that.has.lengthOf(10);",
+              "});",
+              "",
+              "pm.test(\"У каждого пользователя есть id, name, username, email\", function () {",
+              "    pm.response.json().forEach(function (user) {",
+              "        pm.expect(user).to.include.all.keys(\"id\", \"name\", \"username\", \"email\");",
+              "        pm.expect(user.email).to.include(\"@\");",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      }
+    },
+    {
+      "name": "GET Получить пользователя",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const userSchema = {",
+              "    type: \"object\",",
+              "    required: [\"id\", \"name\", \"username\", \"email\", \"address\", \"phone\", \"company\"],",
+              "    properties: {",
+              "        id: { type: \"integer\" },",
+              "        name: { type: \"string\" },",
+              "        username: { type: \"string\" },",
+              "        email: { type: \"string\" },",
+              "        address: {",
+              "            type: \"object\",",
+              "            required: [\"street\", \"city\", \"zipcode\", \"geo\"],",
+              "            properties: {",
+              "                city: { type: \"string\" },",
+              "                geo: {",
+              "                    type: \"object\",",
+              "                    required: [\"lat\", \"lng\"]",
+              "                }",
+              "            }",
+              "        },",
+              "        phone: { type: \"string\" },",
+              "        company: { type: \"object\", required: [\"name\"] }",
+              "    }",
+              "};",
+              "",
+              "pm.test(\"Статус-код 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Время ответа меньше 2000 мс\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+              "});",
+              "",
+              "pm.test(\"Структура JSON соответствует схеме\", function () {",
+              "    pm.response.to.have.jsonSchema(userSchema);",
+              "});",
+              "",
+              "pm.test(\"Значения полей пользователя с id = 1\", function () {",
+              "    const user = pm.response.json();",
+              "    pm.expect(user.id).to.eql(1);",
+              "    pm.expect(user.name).to.eql(\"Leanne Graham\");",
+              "    pm.expect(user.username).to.eql(\"Bret\");",
+              "    pm.expect(user.email).to.eql(\"Sincere@april.biz\");",
+              "    pm.expect(user.address.city).to.eql(\"Gwenborough\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "name": "POST Создать пользователя",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Уникальный email, чтобы каждый запуск отправлял новые данные",
+              "pm.collectionVariables.set(\"newEmail\", \"ivan.petrov.\" + Date.now() + \"@example.com\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const sent = JSON.parse(pm.request.body.raw);",
+              "// в теле запроса email задан переменной, берём её подставленное значение",
+              "sent.email = pm.collectionVariables.get(\"newEmail\");",
+              "",
+              "pm.test(\"Статус-код 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"В ответе возвращается id нового пользователя\", function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.id).to.be.a(\"number\");",
+              "    pm.expect(body.id).to.eql(11);",
+              "    pm.collectionVariables.set(\"createdId\", body.id);",
+              "});",
+              "",
+              "pm.test(\"Ответ содержит отправленные данные\", function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.name).to.eql(sent.name);",
+              "    pm.expect(body.username).to.eql(sent.username);",
+              "    pm.expect(body.email).to.eql(sent.email);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; charset=UTF-8"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Иван Петров\",\n  \"username\": \"ivan_petrov\",\n  \"email\": \"{{newEmail}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "PUT Обновить пользователя",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const sent = JSON.parse(pm.request.body.raw);",
+              "",
+              "pm.test(\"Статус-код 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"id пользователя не изменился\", function () {",
+              "    pm.expect(pm.response.json().id).to.eql(1);",
+              "});",
+              "",
+              "pm.test(\"Поля обновлены переданными значениями\", function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.name).to.eql(sent.name);",
+              "    pm.expect(body.username).to.eql(sent.username);",
+              "    pm.expect(body.email).to.eql(sent.email);",
+              "});",
+              "",
+              "pm.test(\"PUT заменяет ресурс целиком: старых полей нет\", function () {",
+              "    pm.expect(pm.response.json()).to.not.have.property(\"address\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; charset=UTF-8"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "1"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": 1,\n  \"name\": \"Пётр Сидоров\",\n  \"username\": \"petr_sidorov\",\n  \"email\": \"petr.sidorov@example.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "GET Несуществующий пользователь",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Статус-код 404 Not Found\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test(\"Тело ответа — пустой объект\", function () {",
+              "    pm.expect(pm.response.json()).to.eql({});",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/users/9999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            "9999"
+          ]
+        }
+      }
+    }
+  ]
+}

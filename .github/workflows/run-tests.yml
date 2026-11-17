@@ -1,0 +1,65 @@
+name: Run autotests
+
+# Когда запускать: при каждом push и pull request в main, а также вручную
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    name: pytest (${{ matrix.suite }})
+    # Установка ОС: виртуальная машина с Ubuntu (Chrome уже предустановлен)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [lab4_ui_tests, lab5_api_tests, lab6_unit_tests]
+    defaults:
+      run:
+        working-directory: ${{ matrix.suite }}
+    env:
+      HEADLESS: "1"  # Chrome без окна для UI-тестов
+
+    steps:
+      - name: Получить код репозитория
+        uses: actions/checkout@v4
+
+      - name: Установить Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: ${{ matrix.suite }}/requirements.txt
+
+      - name: Установить зависимости
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Запустить тесты pytest
+        run: python -m pytest -v --junitxml=report.xml
+
+      - name: Сохранить отчёт JUnit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-${{ matrix.suite }}
+          path: ${{ matrix.suite }}/report.xml
+
+  postman:
+    name: newman (Postman collection)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получить код репозитория
+        uses: actions/checkout@v4
+
+      - name: Установить Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Запустить коллекцию Postman через Newman
+        run: npx --yes newman@6 run lab5_api_tests/postman/TPO_Lab5_Users.postman_collection.json

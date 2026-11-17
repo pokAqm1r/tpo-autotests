@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Обратная связь</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            max-width: 520px;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="email"], input[type="tel"],
+        select, textarea {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 4px;
+            padding: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea {
+            height: 90px;
+            resize: vertical;
+        }
+
+        .checkbox-label {
+            font-weight: normal;
+        }
+
+        .error {
+            color: #c00;
+            font-size: 13px;
+            min-height: 16px;
+            margin: 4px 0 0;
+        }
+
+        .invalid {
+            border: 1px solid #c00;
+        }
+
+        button {
+            margin-top: 16px;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        #success-message {
+            padding: 12px;
+            background: #e6f6e6;
+            border: 1px solid #3a3;
+        }
+
+        [hidden] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Обратная связь</h1>
+
+    <form id="contact-form" novalidate>
+        <label for="name">Имя *</label>
+        <input id="name" name="name" type="text">
+        <p id="name-error" class="error"></p>
+
+        <label for="email">Email *</label>
+        <input id="email" name="email" type="email">
+        <p id="email-error" class="error"></p>
+
+        <label for="phone">Телефон</label>
+        <input id="phone" name="phone" type="tel" placeholder="+79991234567">
+        <p id="phone-error" class="error"></p>
+
+        <label for="subject">Тема обращения *</label>
+        <select id="subject" name="subject">
+            <option value="">-- выберите тему --</option>
+            <option value="question">Вопрос</option>
+            <option value="order">Заказ</option>
+            <option value="complaint">Жалоба</option>
+        </select>
+        <p id="subject-error" class="error"></p>
+
+        <label for="message">Сообщение *</label>
+        <textarea id="message" name="message"></textarea>
+        <p id="message-error" class="error"></p>
+
+        <label class="checkbox-label">
+            <input id="agree" name="agree" type="checkbox">
+            Согласен на обработку персональных данных *
+        </label>
+        <p id="agree-error" class="error"></p>
+
+        <button id="submit-button" type="submit">Отправить</button>
+    </form>
+
+    <p id="success-message" hidden></p>
+
+    <script>
+        const form = document.querySelector("#contact-form");
+        const successMessage = document.querySelector("#success-message");
+
+        const NAME_PATTERN = /^[A-Za-zА-Яа-яЁё\- ]{2,50}$/;
+        const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        const PHONE_PATTERN = /^\+7\d{10}$/;
+
+        function validateName(value) {
+            if (value === "") {
+                return "Введите имя";
+            }
+            if (!NAME_PATTERN.test(value)) {
+                return "Имя должно содержать от 2 до 50 букв";
+            }
+            return "";
+        }
+
+        function validateEmail(value) {
+            if (value === "") {
+                return "Введите email";
+            }
+            if (!EMAIL_PATTERN.test(value)) {
+                return "Некорректный email";
+            }
+            return "";
+        }
+
+        function validatePhone(value) {
+            if (value !== "" && !PHONE_PATTERN.test(value)) {
+                return "Телефон должен быть в формате +7XXXXXXXXXX";
+            }
+            return "";
+        }
+
+        function validateSubject(value) {
+            return value === "" ? "Выберите тему обращения" : "";
+        }
+
+        function validateMessage(value) {
+            if (value === "") {
+                return "Введите сообщение";
+            }
+            if (value.length < 10) {
+                return "Сообщение должно содержать не менее 10 символов";
+            }
+            return "";
+        }
+
+        function validateAgree(checked) {
+            return checked ? "" : "Необходимо согласие на обработку данных";
+        }
+
+        function showError(fieldId, text) {
+            document.querySelector("#" + fieldId + "-error").textContent = text;
+            document.querySelector("#" + fieldId)
+                .classList.toggle("invalid", text !== "");
+        }
+
+        form.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const value = (id) => document.querySelector("#" + id).value.trim();
+            const name = value("name");
+            const errors = {
+                name: validateName(name),
+                email: validateEmail(value("email")),
+                phone: validatePhone(value("phone")),
+                subject: validateSubject(value("subject")),
+                message: validateMessage(value("message")),
+                agree: validateAgree(document.querySelector("#agree").checked)
+            };
+
+            let hasErrors = false;
+            for (const field in errors) {
+                showError(field, errors[field]);
+                if (errors[field] !== "") {
+                    hasErrors = true;
+                }
+            }
+
+            if (!hasErrors) {
+                form.hidden = true;
+                successMessage.textContent =
+                    "Спасибо, " + name + "! Ваше сообщение отправлено.";
+                successMessage.hidden = false;
+            }
+        });
+    </script>
+</body>
+</html>
