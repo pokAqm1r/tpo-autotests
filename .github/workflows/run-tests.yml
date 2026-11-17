@@ -25,10 +25,10 @@ jobs:
 
     steps:
       - name: Получить код репозитория
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Установить Python 3.13
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
           cache: pip
@@ -44,7 +44,7 @@ jobs:
 
       - name: Сохранить отчёт JUnit
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: report-${{ matrix.suite }}
           path: ${{ matrix.suite }}/report.xml
@@ -54,12 +54,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Получить код репозитория
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Установить Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Запустить коллекцию Postman через Newman
         run: npx --yes newman@6 run lab5_api_tests/postman/TPO_Lab5_Users.postman_collection.json
